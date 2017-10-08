@@ -1,0 +1,3 @@
+etce_bbcnews_homepage:
+    path:     /bbc/{name}
+    defaults: { _controller: EtceBbcnewsBundle:Default:index }
