@@ -22,19 +22,16 @@ class DefaultController extends Controller
         // Para incluir una clase de funciones
         //require $this->get('kernel')->getRootDir() . '/../src/Etce/BbcnewsBundle/vendor/guzzlehttp/guzzle/src/Client.php';
 
-        // Ejemplo con guzzle cliente 5.3
-        // http://docs.guzzlephp.org/en/5.3/
+        // Ejemplo con guzzle cliente 6.0
+        // https://github.com/guzzle/guzzle
         $client = new Client();
-        $res = $client->get('http://guzzlephp.org');
-        //$res = $client->get('https://api.github.com/user', ['auth' =>  ['user', 'pass']]);
+        $res = $client->request('GET', 'https://api.github.com/repos/guzzle/guzzle');
         echo $res->getStatusCode();
-        // "200"
-        echo $res->getHeader('content-type');
+        // 200
+        echo $res->getHeaderLine('content-type');
         // 'application/json; charset=utf8'
         echo $res->getBody();
-        // {"type":"User"...'
-        var_export($res->json());
-        // Outputs the JSON decoded data
+        // '{"id": 1420053, "name": "guzzle", ...}'
 
         return $this->render('EtceBbcnewsBundle:Default:index.html.twig', array('name' => $name));
     }
