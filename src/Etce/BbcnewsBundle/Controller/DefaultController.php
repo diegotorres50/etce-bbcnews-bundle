@@ -8,6 +8,7 @@ namespace Etce\BbcnewsBundle\Controller;
 require_once __DIR__.'/../vendor/autoload.php';
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Component\HttpFoundation\Response;
 
 use GuzzleHttp\Client;
 
@@ -19,14 +20,6 @@ class DefaultController extends Controller
     // http://www.bbcnewsetce.lo/bbc/diego
     public function indexAction($name)
     {
-
-        // Para persistir y obtener datos de redis
-        $client = new Predis\Client();
-        $client->set('nombre', 'diego');
-        $value = $client->get('nombre');
-
-        echo "el valor en redis es: " . $value;
-
         // Para usarlo como un servicio inyectado
         // $this->forward('etce_bbcnews.guzzle:client', array('name' => $name));
 
@@ -45,5 +38,77 @@ class DefaultController extends Controller
         // '{"id": 1420053, "name": "guzzle", ...}'
 
         return $this->render('EtceBbcnewsBundle:Default:index.html.twig', array('name' => $name));
+    }
+
+    // http://www.bbcnewsetce.lo/redis
+    public function redisAction()
+    {
+        // Para persistir y obtener datos de redis
+        $arguments = array(
+            'scheme'        => 'tcp',
+            'host'          => '127.0.0.1',
+            'port'          => 6379,
+            'database'      => 8,
+            'password'      => null,
+            'timeout'       => 5.0,
+            'alias'         => null,
+            'throw_errors'  => true
+        );
+
+        try {
+
+            // Funciona para lanzar una excepcion
+            //throw new \Symfony\Component\HttpKernel\Exception\HttpException(500, "Some description");
+
+            // Levanta redis
+            $client = new Predis\Client($arguments);
+
+            // Verifica si existe una key
+            $exists = $client->exists('12345601');
+
+            // Setea una key y su valor
+            $client->set('12345601', 'http://bbcnews.com/noticias/12345601');
+
+            // Obtiene el valor de una key
+            $value = $client->get('12345601');
+
+            //Get list of all keys. This creates an array of keys from the redis-cli output of "KEYS *"
+            $list = $client->keys("*");
+            //Optional: Sort Keys alphabetically
+            sort($list);
+
+            $allKeys = array();
+
+            //Loop through list of keys
+            foreach ($list as $key) {
+                //Get Value of Key from Redis
+                $val = $client->get($key);
+
+                //Print Key/value Pairs
+                $allKeys[] = "<b>Key:</b> $key <br /><b>Value:</b> $val <br /><br />";
+            }
+            //Disconnect from Redis
+            //$client->disconnect();
+
+            // Borra todas las keys de la base de datos
+            $flush = $client->flushdb();
+        } catch (Exception $e) {
+            echo "Couldn't connect to Redis";
+            echo $e->getMessage();
+            die;
+        }
+
+        $res = array(
+            'exists' => intval($exists),
+            'value' => $value,
+            'fush' => $flush,
+            'all_keys' => $allKeys
+        );
+
+        $response = new Response(json_encode(array($res)));
+        $response->headers->set('Content-Type', 'application/json');
+
+        return $response;
+
     }
 }
