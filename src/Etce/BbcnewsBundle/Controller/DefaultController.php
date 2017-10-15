@@ -57,7 +57,7 @@ class DefaultController extends Controller
 
         try {
 
-            // Funciona para lanzar una excepcion
+            // Funciona para lanzar una excepcion (ver mi listener creado en Listeners y en Services.yml)
             //throw new \Symfony\Component\HttpKernel\Exception\HttpException(500, "Some description");
 
             // Levanta redis
@@ -92,10 +92,17 @@ class DefaultController extends Controller
 
             // Borra todas las keys de la base de datos
             $flush = $client->flushdb();
-        } catch (Exception $e) {
-            echo "Couldn't connect to Redis";
-            echo $e->getMessage();
-            die;
+        } catch (\Exception $ex) {
+            // Si el servicio del listener esta prendido no funcionara
+            $class = get_class($ex);
+            if ($class == 'Symfony\Component\HttpKernel\Exception\HttpException') {
+                // create a response for HttpException
+                $return = array('errorbuu'=>array('code'=>500,'message'=>$ex->getMessage()));
+                return new Response(json_encode($return), 200, array('Content-Type' => 'application/json'));
+            } else {
+                // create a response for all other Exceptions
+                print_r('otra cosa'); die;
+            }
         }
 
         $res = array(
