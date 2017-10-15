@@ -11,11 +11,22 @@ use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 
 use GuzzleHttp\Client;
 
+// https://github.com/nrk/predis
+use Predis;
+
 class DefaultController extends Controller
 {
     // http://www.bbcnewsetce.lo/bbc/diego
     public function indexAction($name)
     {
+
+        // Para persistir y obtener datos de redis
+        $client = new Predis\Client();
+        $client->set('nombre', 'diego');
+        $value = $client->get('nombre');
+
+        echo "el valor en redis es: " . $value;
+
         // Para usarlo como un servicio inyectado
         // $this->forward('etce_bbcnews.guzzle:client', array('name' => $name));
 
