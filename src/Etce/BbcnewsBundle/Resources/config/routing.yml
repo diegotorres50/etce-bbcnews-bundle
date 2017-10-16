@@ -4,3 +4,6 @@ etce_bbcnews_homepage:
 etce_bbcnews_redis:
     path:     /redis
     defaults: { _controller: EtceBbcnewsBundle:Default:redis }
+etce_bbcnews_redisclient:
+    path:     /redisclient
+    defaults: { _controller: EtceBbcnewsBundle:Default:redisclient }

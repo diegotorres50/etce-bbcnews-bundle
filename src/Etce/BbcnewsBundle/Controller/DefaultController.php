@@ -15,6 +15,8 @@ use GuzzleHttp\Client;
 // https://github.com/nrk/predis
 use Predis;
 
+use Etce\BbcnewsBundle\Model\RedisClient;
+
 class DefaultController extends Controller
 {
     // http://www.bbcnewsetce.lo/bbc/diego
@@ -85,7 +87,7 @@ class DefaultController extends Controller
                 $val = $client->get($key);
 
                 //Print Key/value Pairs
-                $allKeys[] = "<b>Key:</b> $key <br /><b>Value:</b> $val <br /><br />";
+                $allKeys[$key] = $val;
             }
             //Disconnect from Redis
             //$client->disconnect();
@@ -117,5 +119,60 @@ class DefaultController extends Controller
 
         return $response;
 
+    }
+
+    // http://www.bbcnewsetce.lo/redisclient
+    public function redisclientAction()
+    {
+        // Para persistir y obtener datos de redis
+        $arguments = array(
+            'scheme'        => 'tcp',
+            'host'          => '127.0.0.1',
+            'port'          => 6379,
+            'database'      => 10,
+            'password'      => null,
+            'timeout'       => 5.0,
+            'alias'         => null,
+            'throw_errors'  => true
+        );
+
+        try {
+            // Levanta redis
+            $client = new RedisClient($arguments, []);
+            // create a timestamp
+            $now = new \DateTime('now', new \DateTimeZone('UTC'));
+            $now = $now->format('U');
+            $client->setHashMultipleFields(
+                'andres',
+                array(
+                    'cedula' => '80123858',
+                    'edad' => 36,
+                    'timestamp' => $now
+                    )
+                );
+        } catch (\Exception $ex) {
+            // Si el servicio del listener esta prendido no funcionara
+            $class = get_class($ex);
+            if ($class == 'Symfony\Component\HttpKernel\Exception\HttpException') {
+                // create a response for HttpException
+                $return = array('errorbuu'=>array('code'=>500,'message'=>$ex->getMessage()));
+                return new Response(json_encode($return), 200, array('Content-Type' => 'application/json'));
+            } else {
+                // create a response for all other Exceptions
+                print_r('otra cosa'); die;
+            }
+        }
+
+        $res = array(
+            'exists2' => intval($exists),
+            'value' => $value,
+            'fush' => $flush,
+            'all_keys' => $allKeys
+        );
+
+        $response = new Response(json_encode(array($res)));
+        $response->headers->set('Content-Type', 'application/json');
+
+        return $response;
     }
 }
